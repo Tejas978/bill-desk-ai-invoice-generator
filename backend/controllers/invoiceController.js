@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import path from "path";
 import { getAuth } from "@clerk/express";
 import Invoice from "../models/invoiceModel.js";
+import cloudinary from "../config/cloudinary.js";
 
 const API_BASE = "http://localhost:4000";
 
@@ -37,30 +38,48 @@ function isObjectIdString(val) {
 }
 
 /** Map multer-uploaded files to public URLs */
-function uploadedFilesToUrls(req) {
-  const urls = {};
-  if (!req.files) return urls;
+// function uploadedFilesToUrls(req) {
+//   const urls = {};
+//   if (!req.files) return urls;
 
-  const mapping = {
-    logoName: "logoDataUrl",
-    stampName: "stampDataUrl",
-    signatureNameMeta: "signatureDataUrl",
-    logo: "logoDataUrl",
-    stamp: "stampDataUrl",
-    signature: "signatureDataUrl",
-  };
+//   const mapping = {
+//     logoName: "logoDataUrl",
+//     stampName: "stampDataUrl",
+//     signatureNameMeta: "signatureDataUrl",
+//     logo: "logoDataUrl",
+//     stamp: "stampDataUrl",
+//     signature: "signatureDataUrl",
+//   };
 
-  Object.keys(mapping).forEach((field) => {
-    const arr = req.files[field];
-    if (Array.isArray(arr) && arr[0]) {
-      const filename =
-        arr[0].filename || (arr[0].path && path.basename(arr[0].path));
-      if (filename) urls[mapping[field]] = `${API_BASE}/uploads/${filename}`;
-    }
+//   Object.keys(mapping).forEach((field) => {
+//     const arr = req.files[field];
+//     if (Array.isArray(arr) && arr[0]) {
+//       const filename =
+//         arr[0].filename || (arr[0].path && path.basename(arr[0].path));
+//       if (filename) urls[mapping[field]] = `${API_BASE}/uploads/${filename}`;
+//     }
+//   });
+
+//   return urls;
+// }
+
+async function uploadToCloudinary(file, folder) {
+  if (!file) return null;
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: `invoiceapp/${folder}` },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+
+    stream.end(file.buffer);
   });
-
-  return urls;
 }
+
+
 
 /** Generate a collision-resistant invoice number (and check DB for existing) */
 async function generateUniqueInvoiceNumber(attempts = 8) {
@@ -103,7 +122,7 @@ export async function createInvoice(req, res) {
       body.taxPercent ?? body.tax ?? body.defaultTaxPercent ?? 0
     );
     const totals = computeTotals(items, taxPercent);
-    const fileUrls = uploadedFilesToUrls(req);
+    // const fileUrls = uploadedFilesToUrls(req);
 
     // If client supplied invoiceNumber, ensure it doesn't already exist
     let invoiceNumberProvided =
@@ -328,7 +347,7 @@ export async function updateInvoice(req, res) {
       body.taxPercent ?? body.tax ?? body.defaultTaxPercent ?? existing.taxPercent ?? 0
     );
     const totals = computeTotals(items, taxPercent);
-    const fileUrls = uploadedFilesToUrls(req);
+    // const fileUrls = uploadedFilesToUrls(req);
 
     const update = {
       invoiceNumber: body.invoiceNumber,
