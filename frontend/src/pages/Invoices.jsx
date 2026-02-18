@@ -5,7 +5,7 @@ import GeminiIcon from "../components/GeminiIcon";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://bill-desk-ai-invoice-generator.onrender.com";
 
 /* ─── helpers ─── */
 function resolveImageUrl(url) {

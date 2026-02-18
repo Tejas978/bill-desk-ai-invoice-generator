@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = "https://bill-desk-ai-invoice-generator.onrender.com";
 
 /* ---------- small icon components ---------- */
 const UploadIcon = () => (
