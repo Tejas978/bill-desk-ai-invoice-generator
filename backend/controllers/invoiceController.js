@@ -44,9 +44,24 @@ export async function createInvoice(req, res) {
       return res.status(401).json({ success: false, message: "Authentication required" });
 
     const body = req.body;
-    const items = Array.isArray(body.items) ? body.items : JSON.parse(body.items || "[]");
+
+    const items = Array.isArray(body.items)
+      ? body.items
+      : JSON.parse(body.items || "[]");
+
     const taxPercent = Number(body.taxPercent || 0);
     const totals = computeTotals(items, taxPercent);
+
+    /* 🔥 STATUS FIX START */
+    const rawStatus = body.status || body.payment_status || "draft";
+    const normalizedStatus = String(rawStatus).toLowerCase();
+
+    const allowedStatuses = ["draft", "sent", "paid", "unpaid", "overdue"];
+
+    const finalStatus = allowedStatuses.includes(normalizedStatus)
+      ? normalizedStatus
+      : "draft";
+    /* 🔥 STATUS FIX END */
 
     // Upload images
     const logoUrl = await uploadToCloudinary(req.files?.logoName?.[0], "logos");
@@ -64,7 +79,7 @@ export async function createInvoice(req, res) {
       tax: totals.tax,
       total: totals.total,
       currency: body.currency || "INR",
-      status: body.status || "draft",
+      status: finalStatus,   //  FIXED HERE
       taxPercent,
       logoDataUrl: logoUrl || body.logoDataUrl || null,
       stampDataUrl: stampUrl || body.stampDataUrl || null,
@@ -83,7 +98,6 @@ export async function createInvoice(req, res) {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
-
 /* ===========================================================
    GET ALL
 =========================================================== */
