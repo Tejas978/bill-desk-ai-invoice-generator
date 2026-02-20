@@ -16,12 +16,13 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // CORS (important)
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://bill-desk-ai-invoice-generator-1.onrender.com"
+  ],
+  credentials: true
+}));
 
 //  Clerk middleware (adds req.auth)
 app.use(clerkMiddleware());
